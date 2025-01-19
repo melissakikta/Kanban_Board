@@ -5,7 +5,11 @@ import bcrypt from 'bcrypt';
 
 export const login = async (req: Request, res: Response) => {
   // DONE: If the user exists and the password is correct, return a JWT token
-  const { username, password } = req.body;
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Username and password are required' });
+    }
 
   const user = await User.findOne({
     where: { username },
@@ -23,6 +27,10 @@ export const login = async (req: Request, res: Response) => {
 
   const token = jwt.sign({ username }, secretKey, { expiresIn: '1h' });
   return res.json({ token });
+} catch (err) {
+  console.error('Error during login:', err);
+  return res.status(500).json({ message: 'Login error' });
+}
 };
 
 const router = Router();
