@@ -3,7 +3,7 @@ import { UserLogin } from "../interfaces/UserLogin";
 const login = async (userInfo: UserLogin) => {
   try {
     // Send a POST request to '/auth/login' with user login information in JSON format
-    const response = await fetch('/', {
+    const response = await fetch('/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -13,9 +13,14 @@ const login = async (userInfo: UserLogin) => {
 
     // Throw error if response status is not OK (200-299)
     if (!response.ok) {
-      const errorData = await response.json(); // Parse error response as JSON
-      console.error(`Login failed with status ${response.status}`, errorData); // Log the error message
-      throw new Error(errorData.message || 'Authentication failed'); // Throw a detailed error message    
+      let errorMessage = 'Authentication failed'; // Default error message
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (err) {
+        console.warn('Non-JSON response or empty body from server');
+      }
+      throw new Error(errorMessage);
     }
 
     // Parse the response body as JSON

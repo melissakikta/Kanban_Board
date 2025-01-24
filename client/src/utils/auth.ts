@@ -1,32 +1,30 @@
 import { JwtPayload, jwtDecode } from 'jwt-decode';
-import { UserData } from '../interfaces/UserData';
+// import { UserData } from '../interfaces/UserData';
 
 class AuthService {
   getProfile() {
     // DONE: return the decoded token
-    return jwtDecode<UserData>(this.getToken());
+    const token = this.getToken();
+    return token ? jwtDecode<JwtPayload>(token) : null;
   }
 
   loggedIn() {
     // DONE: return a value that indicates if the user is logged in
     const token = this.getToken();
-    return token;
+    return !!token && !this.isTokenExpired(token);
   }
   
   isTokenExpired(token: string) {
-    // DONE: return a value that indicates if the token is expired
     try {
-      // Attempt to decode the provided token using jwtDecode, expecting a JwtPayload type.
       const decoded = jwtDecode<JwtPayload>(token);
-
-      // Check if the decoded token has an 'exp' (expiration) property and if it is less than the current time in seconds.
-      if (decoded?.exp && decoded?.exp < Date.now() / 1000) {
-        // If the token is expired, return true indicating that it is expired.
-        return true;
+      if (decoded.exp) {
+        const now = Math.floor(Date.now() / 1000); // Current time in seconds
+        return decoded.exp < now; // Token is expired if current time > token expiration
       }
+      return false; // If no exp field, assume it's valid
     } catch (err) {
-      // If decoding fails (e.g., due to an invalid token format), catch the error and return false.
-      return false;
+      console.error('Failed to decode token', err);
+      return true; // Treat as expired if token can't be decoded
     }
   }
 
